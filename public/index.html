@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tienda de Videojuegos</title>
+  <style>
+    :root{
+      --pink:#ffc0cb; --plum:#dda0dd; --powder:#b0e0e6;
+      --ink:#253238; --muted:#596a73; --white:#ffffff;
+    }
+    body{
+      margin:0; font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif; color:var(--ink);
+      background:
+        radial-gradient(1200px 1200px at -15% -10%, var(--powder) 0%, transparent 60%),
+        radial-gradient(1000px 1000px at 110% -10%, var(--plum) 0%, transparent 60%),
+        radial-gradient(800px 800px at 50% 120%, var(--pink) 0%, transparent 55%),
+        #f7f9fb; min-height:100dvh;
+    }
+    .wrap{ max-width:1024px; margin:32px auto; padding:0 20px 40px; }
+
+    .card,.panel{
+      background:var(--white); border-radius:16px; padding:18px;
+      border:1px solid rgba(0,0,0,.06); box-shadow:0 10px 24px rgba(0,0,0,.06);
+    }
+    .hero{
+      background:linear-gradient(135deg,var(--powder),var(--plum));
+      border-radius:18px; padding:22px; box-shadow:0 12px 30px rgba(0,0,0,.08);
+      border:1px solid rgba(0,0,0,.06); margin-bottom:16px;
+      display:flex; align-items:center; gap:12px;
+    }
+    .hero img{ width:48px; height:48px; object-fit:contain; filter:drop-shadow(0 2px 6px rgba(0,0,0,.08)); }
+    h1,h2{ margin:0 0 8px }
+    .muted{ color:var(--muted); font-size:14px }
+    .hidden{ display:none }
+
+    .field label{ font-size:14px; color:var(--muted) }
+    .field input{
+      width:100%; padding:12px; margin-top:6px; border-radius:10px;
+      border:1px solid #dde3e8; background:#fbfdff;
+    }
+    .grid{ display:grid; gap:12px }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center }
+
+    button{
+      border:none; background:var(--plum); color:#1f2430; font-weight:600; cursor:pointer;
+      padding:10px 14px; border-radius:10px; box-shadow:0 6px 14px rgba(0,0,0,.06);
+    }
+    button.secondary{ background:var(--powder) }
+    button.danger{ background:var(--pink) }
+
+    /* Productos */
+    .products{
+      display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px;
+    }
+    .product-card{
+      border:1px solid rgba(0,0,0,.06); border-radius:14px; padding:14px; background:#fff;
+      display:grid; grid-template-rows:auto 1fr auto; gap:8px;
+    }
+    .product-card img{
+      width:100%; height:150px; object-fit:cover; border-radius:12px; background:#f5f7fb;
+      border:1px solid rgba(0,0,0,.05);
+    }
+
+    /* Carrito */
+    .cart-title{ display:flex; align-items:center; gap:10px; margin:0 0 10px 0; }
+    .cart-title img{ width:42px; height:42px; object-fit:contain; filter:drop-shadow(0 2px 6px rgba(0,0,0,.08)); }
+    .cart-item{ display:flex; align-items:center; gap:10px; margin:6px 0; }
+    .cart-item img{ width:42px; height:42px; object-fit:cover; border-radius:8px; border:1px solid rgba(0,0,0,.06); }
+
+    /* Avisos */
+    .banner{ display:none; margin-top:10px; padding:10px 12px; border-radius:10px; font-weight:600 }
+    .banner.show{ display:block }
+    .banner.ok{ background:#eaf7ff; border:1px solid #cae9ff; color:#145a76 }
+    .banner.bad{ background:#fff1f3; border:1px solid #ffd7dd; color:#7e1d2a }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <img src="/images/cart-heart.png" alt="Cart" />
+      <div>
+        <h1>Tienda de Videojuegos</h1>
+        <p class="muted">JWT + OAuth (Google) · Carrito protegido</p>
+      </div>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="loginSection" class="card">
+      <h2>Iniciar sesión</h2>
+      <div class="grid" style="grid-template-columns:1fr 1fr">
+        <div class="field">
+          <label>Usuario</label>
+          <input id="username" placeholder="admin" />
+        </div>
+        <div class="field">
+          <label>Contraseña</label>
+          <input id="password" type="password" placeholder="admin123" />
+        </div>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <button id="btnLogin">Iniciar Sesión</button>
+        <a href="/api/auth/google"><button type="button" class="secondary">Login con Google</button></a>
+      </div>
+      <div id="loginMessage" class="muted" style="color:#9a1b2e; min-height:18px; margin-top:8px"></div>
+      <div class="muted" style="margin-top:8px">
+        <strong>Usuarios demo:</strong> admin/admin123 · cliente/cliente123
+      </div>
+    </div>
+
+    <!-- APP -->
+    <div id="appSection" class="hidden">
+      <div class="panel row" style="justify-content:space-between">
+        <h2 style="margin:0">Perfil del jugador</h2>
+        <div class="row">
+          <button id="btnLoadPerfil" class="secondary">Cargar perfil</button>
+          <button id="btnLogout" class="danger">Cerrar sesión</button>
+        </div>
+      </div>
+
+      <div id="perfilData" class="panel muted">Pulsa “Cargar perfil”.</div>
+
+      <div class="panel">
+        <h2 style="margin-top:0">Productos</h2>
+        <div id="productosContainer" class="products"></div>
+        <div id="banner" class="banner"></div>
+      </div>
+
+      <div class="panel">
+        <div class="cart-title">
+          <img src="/images/cart-heart.png" alt="Carrito" />
+          <h2 style="margin:0">Carrito</h2>
+        </div>
+        <div id="carritoData" class="panel" style="margin:0 0 12px 0"></div>
+        <div class="row">
+          <button id="btnClearCarrito" class="secondary">Vaciar Carrito</button>
+          <button id="btnCheckout">Finalizar compra</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = s => document.querySelector(s);
+    const loginSection = $('#loginSection'), appSection = $('#appSection');
+    const loginMsg = $('#loginMessage'), perfilData = $('#perfilData');
+    const productosContainer = $('#productosContainer'), carritoData = $('#carritoData'), banner = $('#banner');
+
+    const getToken = () => localStorage.getItem('jwtToken');
+    const setToken = t => localStorage.setItem('jwtToken', t);
+    const clearToken = () => localStorage.removeItem('jwtToken');
+
+    const setBanner = (m, ok=true)=>{ banner.className='banner show '+(ok?'ok':'bad'); banner.textContent=m; setTimeout(()=>banner.classList.remove('show'),2200); };
+    const showLogin = ()=>{ loginSection.classList.remove('hidden'); appSection.classList.add('hidden'); };
+    const showApp   = ()=>{ loginSection.classList.add('hidden');    appSection.classList.remove('hidden'); };
+
+    /* Productos con tus imágenes */
+    const productos = [
+      { productId:"1", nombre:"The Witcher 3", precio:29.99, image:"/images/witcher.png"   },
+      { productId:"2", nombre:"Cyberpunk 2077", precio:59.99, image:"/images/cyberpunk.png"},
+      { productId:"3", nombre:"Minecraft",     precio:19.99, image:"/images/minecraft.png"}
+    ];
+
+    async function bootstrap(){
+      const t = getToken();
+      if(!t){ showLogin(); return; }
+      try{
+        const r = await fetch('/api/perfil', { headers:{ Authorization:`Bearer ${t}` } });
+        if(r.ok){ showApp(); renderProductos(); cargarCarrito(); }
+        else { clearToken(); showLogin(); }
+      }catch{ clearToken(); showLogin(); }
+    }
+
+    // Login normal
+    $('#btnLogin').addEventListener('click', async ()=>{
+      loginMsg.textContent='';
+      const username = $('#username').value.trim();
+      const password = $('#password').value.trim();
+      try{
+        const res = await fetch('/api/login', {
+          method:'POST', headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if(res.ok && data.token){
+          setToken(data.token);
+          showApp(); renderProductos(); cargarCarrito();
+        }else{
+          loginMsg.textContent = data.error || 'Error en credenciales';
+        }
+      }catch{ loginMsg.textContent = 'Error de conexión'; }
+    });
+
+    // Logout
+    $('#btnLogout').addEventListener('click', ()=>{ clearToken(); showLogin(); });
+
+    // Perfil
+    $('#btnLoadPerfil').addEventListener('click', async ()=>{
+      const t = getToken(); if(!t) return showLogin();
+      try{
+        const r = await fetch('/api/perfil',{ headers:{ Authorization:`Bearer ${t}` }});
+        const d = await r.json();
+        if(r.ok){
+          perfilData.innerHTML = `
+            <b>${d.perfil.username}</b> · rol: ${d.perfil.role}<br/>
+            Saldo: $${d.perfil.saldo}<br/>
+            Favoritos: ${d.perfil.juegosFavoritos.join(', ')}
+          `;
+        }else if(r.status===401){ clearToken(); showLogin(); }
+      }catch{ perfilData.textContent='Error al cargar perfil'; }
+    });
+
+    // Render productos con imagen
+    function renderProductos(){
+      productosContainer.innerHTML='';
+      productos.forEach(p=>{
+        const card=document.createElement('div');
+        card.className='product-card';
+        card.innerHTML=`
+          <img src="${p.image}" alt="${p.nombre}" />
+          <div>
+            <h3 style="margin:.4rem 0">${p.nombre}</h3>
+            <p class="muted" style="margin:0 0 .6rem">Precio: $${p.precio}</p>
+          </div>
+          <div class="row">
+            <button onclick="agregarAlCarrito('${p.productId}')">Agregar al carrito</button>
+          </div>`;
+        productosContainer.appendChild(card);
+      });
+    }
+
+    // Carrito
+    async function cargarCarrito(){
+      const r=await fetch('/api/carrito',{ headers:{ Authorization:`Bearer ${getToken()}` }});
+      const d=await r.json();
+      if(r.ok) renderCarrito(d); else if(r.status===401){ clearToken(); showLogin(); }
+    }
+
+    async function agregarAlCarrito(productId){
+      const r=await fetch('/api/carrito/add',{ method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${getToken()}` }, body:JSON.stringify({ productId, cantidad:1 })});
+      const d=await r.json();
+      if(r.ok){ renderCarrito(d); setBanner('Producto agregado'); } else if(r.status===401){ clearToken(); showLogin(); } else setBanner(d.error||'Error al agregar',false);
+    }
+
+    async function eliminarDelCarrito(productId){
+      const r=await fetch(`/api/carrito/remove/${productId}`,{ method:'DELETE', headers:{ Authorization:`Bearer ${getToken()}` }});
+      const d=await r.json();
+      if(r.ok){ renderCarrito(d); setBanner('Producto eliminado'); } else if(r.status===401){ clearToken(); showLogin(); } else setBanner(d.error||'Error al eliminar',false);
+    }
+
+    async function actualizarCantidad(productId, nuevaCantidad){
+      if(nuevaCantidad<0) nuevaCantidad=0;
+      const r=await fetch(`/api/carrito/update/${productId}`,{ method:'PUT', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${getToken()}` }, body:JSON.stringify({ cantidad:nuevaCantidad })});
+      const d=await r.json();
+      if(r.ok){ renderCarrito(d); setBanner('Carrito actualizado'); } else if(r.status===401){ clearToken(); showLogin(); } else setBanner(d.error||'Error al actualizar',false);
+    }
+
+    $('#btnClearCarrito').addEventListener('click', async ()=>{
+      const r=await fetch('/api/carrito/clear',{ method:'DELETE', headers:{ Authorization:`Bearer ${getToken()}` }});
+      const d=await r.json();
+      if(r.ok){ renderCarrito(d); setBanner('Carrito vaciado'); } else if(r.status===401){ clearToken(); showLogin(); } else setBanner(d.error||'Error al vaciar',false);
+    });
+
+    $('#btnCheckout').addEventListener('click', async ()=>{
+      const r=await fetch('/api/carrito/checkout',{ method:'POST', headers:{ Authorization:`Bearer ${getToken()}` }});
+      const d=await r.json();
+      if(r.ok){ renderCarrito(d); alert(`Compra realizada ✔️\nTotal: $${Number(d.order?.total ?? 0).toFixed(2)}`); }
+      else if(r.status===401){ clearToken(); showLogin(); }
+      else alert(d.error || 'No se pudo finalizar la compra');
+    });
+
+    function renderCarrito(cart){
+      if(!cart.items || cart.items.length===0){
+        carritoData.innerHTML="<p class='muted'>El carrito está vacío</p>";
+        return;
+      }
+      carritoData.innerHTML = `
+        <div>
+          ${cart.items.map(it=>`
+            <div class="cart-item">
+              <img src="${it.image || '/images/cart-heart.png'}" alt="${it.nombre || 'item'}" />
+              <div style="flex:1">
+                ${it.nombre} — $${it.precio} × ${it.cantidad}
+              </div>
+              <div class="row">
+                <button class="secondary" onclick="actualizarCantidad('${it.productId}', ${it.cantidad-1})">−</button>
+                <button class="secondary" onclick="actualizarCantidad('${it.productId}', ${it.cantidad+1})">+</button>
+                <button class="danger" onclick="eliminarDelCarrito('${it.productId}')">Eliminar</button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <p style="margin-top:10px"><strong>Total:</strong> $${Number(cart.total).toFixed(2)}</p>
+      `;
+    }
+
+    window.agregarAlCarrito=agregarAlCarrito;
+    window.eliminarDelCarrito=eliminarDelCarrito;
+    window.actualizarCantidad=actualizarCantidad;
+
+    document.addEventListener('DOMContentLoaded', bootstrap);
+  </script>
+</body>
+</html>

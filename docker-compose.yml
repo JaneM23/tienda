@@ -1,0 +1,15 @@
+services:
+  web:
+    build: .
+    container_name: carrito-web
+    ports:
+      - "3000:3000"         # host:contenedor
+    env_file: .env          # lee tus variables del .env local
+    environment:
+      NODE_ENV: "production"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
