@@ -1,0 +1,26 @@
+name: 06 - Smoke Test (run image)
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["05 - Build & Push Image"]
+    types: [ "completed" ]
+
+jobs:
+  smoke:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: docker.io
+          username: janem23
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Pull latest image
+        run: docker pull janem23/image:latest
+
+      - name: Run container (demo)
+        run: |
+          docker run --rm janem23/image:latest node -e "console.log('Container OK: app arranca')"

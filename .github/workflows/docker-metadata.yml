@@ -1,0 +1,26 @@
+name: 03 - Docker Metadata
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+jobs:
+  metadata:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract Docker image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: janem23/image
+          tags: |
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=sha
+            type=ref,event=branch
+            type=ref,event=pr
+      - name: Show tags in summary
+        run: |
+          echo "## Docker Tags" >> $GITHUB_STEP_SUMMARY
+          echo '${{ steps.meta.outputs.tags }}' >> $GITHUB_STEP_SUMMARY

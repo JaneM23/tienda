@@ -1,0 +1,24 @@
+name: 02 - Coverage Metric
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npm test -- --coverage --silent
+      - name: Publish metric to summary
+        shell: bash
+        run: |
+          PCT=$(node -e "const s=require('./coverage/coverage-summary.json');console.log(s.total.lines.pct)")
+          echo "## Coverage-only" >> $GITHUB_STEP_SUMMARY
+          echo "- Lines: ${PCT}%" >> $GITHUB_STEP_SUMMARY
