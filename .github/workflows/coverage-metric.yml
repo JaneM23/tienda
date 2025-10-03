@@ -1,13 +1,14 @@
-name: 02 - Coverage Metric
+name: Coverage Metric
 
 on:
-  workflow_dispatch:
   push:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   coverage:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,17 +23,31 @@ jobs:
         run: npm ci
 
       - name: Run tests with coverage
-        run: npm test -- --coverage
+        run: npm run test:cov
 
+      # (Opcional, útil para depurar)
+      - name: List coverage dir
+        run: ls -la coverage || true
+
+      # Publica la métrica en el Summary.
+      # Usa coverage-summary.json si existe; si no, intenta con coverage-final.json.
       - name: Publish metric to summary
         shell: bash
         run: |
+          FILE=""
           if [ -f coverage/coverage-summary.json ]; then
-            PCT=$(node -e "const s=require('./coverage/coverage-summary.json');console.log(s.total.lines.pct)")
+            FILE="coverage/coverage-summary.json"
+          elif [ -f coverage/coverage-final.json ]; then
+            FILE="coverage/coverage-final.json"
+          fi
+
+          if [ -n "$FILE" ]; then
+            # Lee el % de líneas desde el JSON (funciona para summary y final)
+            PCT=$(node -e "const s=require('./'+'$FILE');const pct=(s.total?.lines?.pct)||(Object.values(s)[0]?.lines?.pct)||0;console.log(pct)")
             echo "## Coverage-only" >> $GITHUB_STEP_SUMMARY
             echo "- Lines: ${PCT}%" >> $GITHUB_STEP_SUMMARY
           else
-            echo "No coverage summary found" >> $GITHUB_STEP_SUMMARY
+            echo "No coverage JSON found (coverage-summary.json or coverage-final.json not present)" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
 

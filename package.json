@@ -5,7 +5,8 @@
   "scripts": {
     "start": "node server.js",
     "test": "jest --runInBand",
-    "test:cov": "jest --coverage"
+    "test:cov": "jest --coverage",
+    "smoke": "node -e \"require('./app'); console.log('App OK')\""
   },
 
  "jest": {
@@ -22,7 +23,7 @@
   "setupFiles": [
     "<rootDir>/jest.setup.js"
   ],
-  "coverageReporters": ["text", "json-summary", "lcov"]
+  "coverageReporters": ["text", "json-summary", "lcov"] 
   },
   "dependencies": {
     "cors": "^2.8.5",
